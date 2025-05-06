@@ -49,7 +49,7 @@ document.addEventListener('click', function (e) {
   getAnimeData(input, page);
 });
 
-//fungsi utama ambil data anime
+//fungsi utama ambil data anime (event handler search anime)
 async function getAnimeData(keyword, page) {
   const loading = document.getElementById('loading');
   loading.classList.remove('d-none');
@@ -105,21 +105,158 @@ function fetchAnime(m, page) {
 }
 
 
+//+++++++++++++++++++++++
+//buat sintaks anyar untuk ambil data anime stream
+let isiStream = document.querySelector('.isiStream');
+ let tombolStream = document.querySelectorAll('.streamBtn')
+
+
+// buat ambil value data set button stream
+document.addEventListener('click', function(e) {
+  // Cari tombol terdekat yang punya class .streamBtn dan data-stream
+  const tombol = e.target.closest('.streamBtn');
+
+  // Kalau tidak ketemu (klik di area lain), abaikan
+  if (!tombol || !tombol.dataset.stream) return;
+
+  const target = tombol.dataset.stream;
+  console.log('DATA STREAM:', target);
+  callStream(target);
+});
+
+//core fungsi pemanggilnya 
+async function  callStream(m) {
+  
+  isiStream.innerHTML = '';
+
+  let fetchStream = await fetchStreamAnime(m);
+  let hasil = fetchStream.map(x => modalStream(x)).join('');
+
+    
+  isiStream.innerHTML = hasil;
+  
+}
+
+
+// function fetchnya 
+function fetchStreamAnime(id){
+  return fetch(`https://api.jikan.moe/v4/anime/${id}/streaming`)
+  .then(x => x.json())
+  .then(x => x.data);
+}
+
+
+//++++++++++++++++++++++++++++++
+// evnt buat nampilin episode anime
+
+//buat ambil element
+let olEpisode = document.querySelector('.epsAnime');
+let btnModal = document.querySelector('.epsBtn')
+
+
+//event listener
+document.addEventListener('click', function(e) {
+  const tombol = e.target.closest('.epsBtn');
+  if (!tombol || !tombol.dataset.episode) return;
+
+  const target = tombol.dataset.episode;
+  console.log('DATA EPISODE:', target);
+  callEpisode(target);
+});
+
+
+//core fungsinya
+async function callEpisode(id) {
+  olEpisode.innerHTML ='';
+
+  let hasilEpisode = await fetchEpisode(id);
+  let detailAnime = await fetchAnimeById(id);
+
+  let hasil = '';
+
+  //untuk isi list eps nya
+  // detailAnime.map(x => hasil += aDetailEpisode(x));
+  hasil += aDetailEpisode(detailAnime);
+  hasilEpisode.map(x =>  hasil += modalEpisode(x));
+
+  olEpisode.innerHTML = hasil;
+  
+  
+}
+
+//fetch data
+//fetch untuk anime detail
+function fetchEpisode(id){
+   return fetch(`https://api.jikan.moe/v4/anime/${id}/episodes`)
+     .then( x => x.json())
+     .then(x => x.data)
+}
+
+//fetch untuk anime detailnya
+function fetchAnimeById(id){
+  return fetch(`https://api.jikan.moe/v4/anime/${id}/full`)
+     .then(x => x.json())
+     .then(x => x.data);
+}
+
+
+
+
+
+//+++++++++++++++++++++++
+//bab inject hasil anime
+//+++++++++++++++++++++++
+
+//inject anime detail untuk eps anime
+function aDetailEpisode(hasil){
+  let title = hasil.title;
+  return `<p class="fw-bolder fs-4">${title}</p>`
+  
+}
+
+//inject episode anime 
+function modalEpisode(hasil){
+  let namaEps = hasil.title;
+  let nomorEps = hasil.mal_id;
+
+  return `
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="ms-2 me-auto">
+                  <div class="fw-bold">Episode ${nomorEps}</div>
+                  ${namaEps}
+                </div>
+            </li>`;
+}
+
+
+//untuk inject hasil streamnya
+function modalStream(m){
+  let source = m.name;
+  let link = m.url;
+  return `<div class="modal-body">
+        <div class="link row d-flex justify-content-center mt-2">
+          <p class="text-center col-12 fs-4">${source}</p>
+          <a href="${link}" class="btn btn-warning stretched-link col-6" target="_blank">Kunjungi</a>
+        </div>`
+}
+        
+
 //buat inject anime cards
 function anime(m) {
   let imageUrl = m.images?.jpg?.image_url || 'https://via.placeholder.com/300x400?text=No+Cover';
   let trailerUrl = m.trailer?.youtube_id ? `https://www.youtube.com/watch?v=${m.trailer.youtube_id}` : '#';
 
   return `
-    <div class="col-12 col-md-3 mb-4 d-flex justify-content-evenly">
+    <div class="col-12 col-md-3 mb-4 d-flex justify-content-evenly" data-mal-id="${m.mal_id}">
       <div class="card border-warning bg-secondary text-white" style="width: 20rem;">
         <img src="${imageUrl}" class="card-img-top object-fit-cover" style="height: 300px; object-fit: cover;" alt="${m.title}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${m.title}</h5>
           <p class="card-text">Rating: ${m.rating || 'N/A'}</p>
           <div class="mt-auto row">
+            <button type="button" class="btn btn-danger mb-2 streamBtn" data-bs-toggle="modal" data-bs-target="#animeStream" data-stream="${m.mal_id}" >Stream Now</button>
             <a href="${trailerUrl}" class="btn btn-primary btn-sm w-100 mb-2 col-6" target="_blank">Trailer</a>
-            <button class="btn btn-warning btn-sm w-100 col-6" data-bs-toggle="modal" data-bs-target="#exampleModal-${m.mal_id}">Detail</button>
+            <button class="btn btn-warning btn-sm w-100 col-6" data-bs-toggle="modal" data-bs-target="#anime-${m.mal_id}">Detail</button>
           </div>
         </div>
       </div>
@@ -134,12 +271,12 @@ function modal(m){
   let studio = m.studios.map(m => m.name)
 
   return `
-  <div class="modal fade" id="exampleModal-${m.mal_id}" tabindex="-1" aria-labelledby="exampleModalLabel-${m.mal_id}" aria-hidden="true">
+  <div class="modal fade" id="anime-${m.mal_id}" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel-${m.mal_id}">${m.title}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title">${m.title}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body row">
           <div class="col-12 col-md-4 mb-3 mb-md-0 ">
@@ -164,8 +301,9 @@ function modal(m){
             </dl>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer btnModal">
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-warning epsBtn" data-bs-toggle="modal" data-bs-target="#showEpisode" data-episode="${m.mal_id}">Lihat Episode</button>
         </div>
       </div>
     </div>
