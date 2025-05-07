@@ -167,29 +167,48 @@ document.addEventListener('click', function(e) {
 
 //core fungsinya
 async function callEpisode(id) {
-  olEpisode.innerHTML ='';
+  olEpisode.innerHTML = `<li class="list-group-item text-center">Loading episode...</li>
+                         <li>
+                            <div class="text-center">
+                              <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                         </li>`;
 
-  let hasilEpisode = await fetchEpisode(id);
+  let hasilEpisode = await fetchEpisode(id, '?');
   let detailAnime = await fetchAnimeById(id);
+  let panjangPage = hasilEpisode.pagination.last_visible_page;
 
   let hasil = '';
-
-  //untuk isi list eps nya
-  // detailAnime.map(x => hasil += aDetailEpisode(x));
   hasil += aDetailEpisode(detailAnime);
-  hasilEpisode.map(x =>  hasil += modalEpisode(x));
+
+  for (let i = 1; i <= panjangPage; i++) {
+    let AmbilEps = await fetchEpisode(id, `?page=${i}`);
+    AmbilEps.data.forEach(x => {
+      hasil += modalEpisode(x);   
+    });
+
+    await delay(350);
+
+  }
 
   olEpisode.innerHTML = hasil;
-  
-  
 }
+
+
+//pro,ise untuk delay hit api,can recycle
+function delay(ms){
+   return new Promise(resolve => setTimeout(resolve,ms));
+}
+
 
 //fetch data
 //fetch untuk anime detail
-function fetchEpisode(id){
-   return fetch(`https://api.jikan.moe/v4/anime/${id}/episodes`)
+function fetchEpisode(id,page){
+   return fetch(`https://api.jikan.moe/v4/anime/${id}/episodes`+ page)
      .then( x => x.json())
-     .then(x => x.data)
+     .then(x => x)
 }
 
 //fetch untuk anime detailnya
