@@ -189,7 +189,7 @@ async function callEpisode(id) {
       hasil += modalEpisode(x);   
     });
 
-    await delay(350);
+    await delay(450);
 
   }
 
