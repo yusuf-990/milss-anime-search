@@ -97,12 +97,6 @@ async function getAnimeData(keyword, page) {
   }
 }
 
-//ambil data dari API
-function fetchAnime(m, page) {
-  return fetch(`https://api.jikan.moe/v4/anime?q=${m}&limit=20&page=${page}&sfw=1`)
-    .then(x => x.json())
-    .then(x => x);
-}
 
 
 //+++++++++++++++++++++++
@@ -138,20 +132,13 @@ async function  callStream(m) {
 }
 
 
-// function fetchnya 
-function fetchStreamAnime(id){
-  return fetch(`https://api.jikan.moe/v4/anime/${id}/streaming`)
-  .then(x => x.json())
-  .then(x => x.data);
-}
-
-
 //++++++++++++++++++++++++++++++
 // evnt buat nampilin episode anime
 
 //buat ambil element
 let olEpisode = document.querySelector('.epsAnime');
 let btnModal = document.querySelector('.epsBtn')
+let tittleModalEpisode = document.querySelector('.title-episode')
 
 
 //event listener
@@ -160,15 +147,16 @@ document.addEventListener('click', function(e) {
   if (!tombol || !tombol.dataset.episode) return;
 
   const target = tombol.dataset.episode;
-  console.log('DATA EPISODE:', target);
+  // console.log('DATA EPISODE:', target);
   callEpisode(target);
 });
 
 
 //core fungsinya
 async function callEpisode(id) {
-  olEpisode.innerHTML = `<li class="list-group-item text-center">Loading episode...</li>
-                         <li>
+  
+  //event loading
+  olEpisode.innerHTML = `<li class="list-group-item text-center">Loading episode...
                             <div class="text-center">
                               <div class="spinner-border text-warning" role="status">
                                 <span class="visually-hidden">Loading...</span>
@@ -176,10 +164,25 @@ async function callEpisode(id) {
                             </div>
                          </li>`;
 
+  tittleModalEpisode.innerHTML =`<li class="list-group-item text-center">
+                                    <div class="spinner-border text-warning" role="status">
+                                      <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </li>`;
+
+
+  //dahulukan untuk modal title (khusus untuk eps saja,karena banyak)
+  let hasilMOdalTitle = await fetchAnimeById(id)
+  let hasilTitleEpisode = injectTitleEpisode(hasilMOdalTitle);
+  tittleModalEpisode.innerHTML = hasilTitleEpisode;
+  
+  //ambil data
   let hasilEpisode = await fetchEpisode(id, '?');
   let detailAnime = await fetchAnimeById(id);
   let panjangPage = hasilEpisode.pagination.last_visible_page;
 
+
+  //inject hasil
   let hasil = '';
   hasil += aDetailEpisode(detailAnime);
 
@@ -194,6 +197,7 @@ async function callEpisode(id) {
   }
 
   olEpisode.innerHTML = hasil;
+
 }
 
 
@@ -203,21 +207,100 @@ function delay(ms){
 }
 
 
-//fetch data
-//fetch untuk anime detail
+
+
+//+++++++++++++++++++++++++++++++++++++
+//fitur untuk nampilin chara dari anime 
+//ambil element
+let modalChara = document.querySelector('.chara-isi')
+let tittleModalChara = document.querySelector('.title-chara')
+
+//event listener
+document.body.addEventListener('click', function(e) {
+  if (e.target.classList.contains('animeChara')) {
+    let data = e.target.dataset.id;
+    callChara(data)
+  }
+
+});
+
+//core fungsinya
+async function callChara(id) {
+  // buat event loading
+  modalChara.innerHTML = `<li class="list-group-item text-center">Loading Chara...
+                            <div class="text-center">
+                              <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                         </li>`;
+  
+  tittleModalChara.innerHTML =`<li class="list-group-item text-center">Loading Chara...
+                            <div class="text-center">
+                              <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                         </li>`;
+  
+  //ambil data
+  let hasilFetch = await fetchChara(id);
+  let hasilMOdalTitle = await fetchAnimeById(id)
+  
+  //mapping hasilnya
+  let hasilChara = hasilFetch.map(x => injectChara(x)).join('');
+  let hasilTitleChara = injectTitleChara(hasilMOdalTitle);
+   
+  //inject hasil
+  modalChara.innerHTML = hasilChara;
+  tittleModalChara.innerHTML = hasilTitleChara;
+
+
+
+  
+}
+
+
+
+
+//+++++++++++++++++++++++
+//     bab fetch 
+//+++++++++++++++++++++++
+
+//fetch data chara
+function fetchChara(id){
+  return fetch(`https://api.jikan.moe/v4/anime/${id}/characters`)
+  .then( x => x.json())
+  .then( x => x.data);
+}
+
+//fetch untuk anime episode detail
 function fetchEpisode(id,page){
-   return fetch(`https://api.jikan.moe/v4/anime/${id}/episodes`+ page)
-     .then( x => x.json())
-     .then(x => x)
+  return fetch(`https://api.jikan.moe/v4/anime/${id}/episodes`+ page)
+    .then( x => x.json())
+    .then(x => x)
 }
 
-//fetch untuk anime detailnya
+//fetch untuk anime detail dengan id
 function fetchAnimeById(id){
-  return fetch(`https://api.jikan.moe/v4/anime/${id}/full`)
-     .then(x => x.json())
-     .then(x => x.data);
+ return fetch(`https://api.jikan.moe/v4/anime/${id}/full`)
+    .then(x => x.json())
+    .then(x => x.data);
 }
 
+// fetch stream anime
+function fetchStreamAnime(id){
+  return fetch(`https://api.jikan.moe/v4/anime/${id}/streaming`)
+  .then(x => x.json())
+  .then(x => x.data);
+}
+
+//fetch anime query search
+function fetchAnime(m, page) {
+  return fetch(`https://api.jikan.moe/v4/anime?q=${m}&limit=20&page=${page}&sfw=1`)
+    .then(x => x.json())
+    .then(x => x);
+}
 
 
 
@@ -226,10 +309,41 @@ function fetchAnimeById(id){
 //bab inject hasil anime
 //+++++++++++++++++++++++
 
+//inject tittle chara
+function injectTitleChara(m){
+  let title = m.title;
+  return `<h5 class="modal-title" id="exampleModalLabel">Character </h5>
+          <p>${title}</p>`
+
+}
+
+//inject title episode
+function injectTitleEpisode(m){
+  let title = m.title;
+  return `<h5 class="modal-title" id="exampleModalLabel">Episodes</h5>
+          <p>${title}</p>`
+
+}
+
+//inject chara untuk detail chara
+function injectChara(m){
+  let gambarLink = m.character.images.jpg.image_url;
+  let namaChara = m.character.name;
+  let voice = m.voice_actors[0]?.person.name || 'Tidak ada';
+
+  return `<div class="card mb-4 " style="width: 12rem;">
+            <img src="${gambarLink}" class="card-img-top image-fluid" style="height : 200px;" alt="${namaChara}">
+            <div class="card-body">
+              <h5 class="card-title">${namaChara}</h5>
+              <p class="card-text">Voice Actor : ${voice}</p>
+            </div>
+         </div>`;
+}
+
 //inject anime detail untuk eps anime
 function aDetailEpisode(hasil){
   let title = hasil.title;
-  return `<p class="fw-bolder fs-4">${title}</p>`
+  return `<p class="fw-bolder fs-4">${title}</p>`;
   
 }
 
@@ -252,7 +366,7 @@ function modalEpisode(hasil){
 function modalStream(m){
   let source = m.name;
   let link = m.url;
-  return `<div class="modal-body">
+  return `
         <div class="link row d-flex justify-content-center mt-2">
           <p class="text-center col-12 fs-4">${source}</p>
           <a href="${link}" class="btn btn-warning stretched-link col-6" target="_blank">Kunjungi</a>
@@ -321,8 +435,9 @@ function modal(m){
           </div>
         </div>
         <div class="modal-footer btnModal">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary animeChara" data-bs-toggle="modal" data-bs-target="#anime-chara" data-id="${m.mal_id}">Chara</button>
           <button type="button" class="btn btn-warning epsBtn" data-bs-toggle="modal" data-bs-target="#showEpisode" data-episode="${m.mal_id}">Lihat Episode</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
