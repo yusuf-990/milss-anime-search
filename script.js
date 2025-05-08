@@ -235,13 +235,11 @@ async function callChara(id) {
                             </div>
                          </li>`;
   
-  tittleModalChara.innerHTML =`<li class="list-group-item text-center">Loading Chara...
-                            <div class="text-center">
-                              <div class="spinner-border text-warning" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                              </div>
-                            </div>
-                         </li>`;
+  tittleModalChara.innerHTML =`<li class="list-group-item text-center">
+                                    <div class="spinner-border text-warning" role="status">
+                                      <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </li>`;
   
   //ambil data
   let hasilFetch = await fetchChara(id);
