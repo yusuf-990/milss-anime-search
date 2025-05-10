@@ -376,6 +376,7 @@ function modalStream(m){
 function anime(m) {
   let imageUrl = m.images?.jpg?.image_url || 'https://via.placeholder.com/300x400?text=No+Cover';
   let trailerUrl = m.trailer?.youtube_id ? `https://www.youtube.com/watch?v=${m.trailer.youtube_id}` : '#';
+  let genres = m.genres.map(m => m.name).join(', ');
 
   return `
     <div class="col-12 col-md-3 mb-4 d-flex justify-content-evenly" data-mal-id="${m.mal_id}">
@@ -383,7 +384,7 @@ function anime(m) {
         <img src="${imageUrl}" class="card-img-top object-fit-cover" style="height: 300px; object-fit: cover;" alt="${m.title}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${m.title}</h5>
-          <p class="card-text">Rating: ${m.rating || 'N/A'}</p>
+          <p class="card-text">Genre: ${genres || 'N/A'}</p>
           <div class="mt-auto row">
             <button type="button" class="btn btn-danger mb-2 streamBtn" data-bs-toggle="modal" data-bs-target="#animeStream" data-stream="${m.mal_id}" >Stream Now</button>
             <a href="${trailerUrl}" class="btn btn-primary btn-sm w-100 mb-2 col-6" target="_blank">Trailer</a>
@@ -400,6 +401,8 @@ function modal(m){
   let imageUrl = m.images?.jpg?.image_url || 'https://via.placeholder.com/300x400?text=No+Cover';
   let genres = m.genres.map(m => m.name).join(', ');
   let studio = m.studios.map(m => m.name)
+  let themes = m.themes.map(x => x.name).join(' ')
+  let demographic = m.demographics.map(x => x.name).join(' ')
 
   return `
   <div class="modal fade" id="anime-${m.mal_id}" tabindex="-1">
@@ -421,11 +424,23 @@ function modal(m){
               <dt class="col-md-4 col-4">Studio</dt>
               <dd class="col-md-8 col-6">${studio}</dd>
 
+              <dt class="col-md-4 col-4">Aired</dt>
+              <dd class="col-md-8 col-6">${m.aired.string}</dd>
+
               <dt class="col-md-4 col-4">Rating</dt>
               <dd class="col-md-8 col-6">${m.rating || 'N/A'}</dd>
 
+              <dt class="col-md-4 col-4">Score</dt>
+              <dd class="col-md-8 col-6">${m.score}</dd>
+
+              <dt class="col-md-4 col-4">Duration</dt>
+              <dd class="col-md-8 col-6">${m.duration}</dd>
+
               <dt class="col-md-4 col-4">Genre</dt>
               <dd class="col-md-8 col-6">${genres}</dd>
+
+              <dt class="col-md-4 col-4">Type</dt>
+              <dd class="col-md-8 col-6">${themes},${demographic}</dd>
 
               <dt class="col-md-4">Synopsis</dt>
               <dd class="col-md-8">${m.synopsis || 'No synopsis available.'}</dd>
